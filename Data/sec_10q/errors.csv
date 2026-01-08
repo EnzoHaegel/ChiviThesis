@@ -1,0 +1,4 @@
+error,ticker
+CIK not found in SEC company_tickers.json,BAC
+CIK not found in SEC company_tickers.json,NWSA
+CIK not found in SEC company_tickers.json,PLD
