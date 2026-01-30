@@ -1,0 +1,10 @@
+# Bond Prediction Model - Requirements
+# GPU version of PyTorch (adjust index-url for your CUDA version)
+
+torch>=2.0.0
+transformers>=4.30.0
+pandas>=2.0.0
+numpy>=1.24.0
+scikit-learn>=1.3.0
+matplotlib>=3.7.0
+tqdm>=4.65.0

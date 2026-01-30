@@ -35,14 +35,14 @@ st.markdown("""
 @st.cache_data(show_spinner=True)
 def load_data(data_path="./csv_raw/*.csv"):
     all_files = glob.glob(data_path)
-    
+
     if not all_files:
         return None
 
     df_list = []
     for filename in all_files:
         try:
-            # Optimize data types for memory efficiency if possible, 
+            # Optimize data types for memory efficiency if possible,
             # but reading as objects/floats first is safer.
             df = pd.read_csv(filename)
             df_list.append(df)
@@ -60,13 +60,13 @@ def load_data(data_path="./csv_raw/*.csv"):
         return None
 
     combined_df = pd.concat(df_list, axis=0, ignore_index=True)
-    
+
     # Convert date columns to datetime
     date_cols = ['datadate', 'rdq']
     for col in date_cols:
         if col in combined_df.columns:
             combined_df[col] = pd.to_datetime(combined_df[col], errors='coerce')
-    
+
     # Clean numeric columns
     numeric_keywords = ['price', 'yield', 'volume', 'return']
     for col in combined_df.columns:
@@ -77,13 +77,13 @@ def load_data(data_path="./csv_raw/*.csv"):
     volume_cols = [c for c in combined_df.columns if 'volume' in c]
     if volume_cols:
         combined_df[volume_cols] = combined_df[volume_cols].fillna(0)
-            
+
     return combined_df
 
 # --- Main App ---
 def main():
     st.title("📊 Financial Data Visualizer")
-    
+
     with st.spinner('Loading heavy datasets... This might take a moment.'):
         df = load_data()
 
@@ -93,7 +93,7 @@ def main():
 
     # --- Sidebar Filters ---
     st.sidebar.header("🔍 Filters Setup")
-    
+
     # Fiscal Year Filter
     if 'fyearq' in df.columns:
         years = sorted(df['fyearq'].unique())
@@ -104,38 +104,38 @@ def main():
     # Ticker Filter (TIC)
     if 'tic' in df.columns:
         tickers = sorted(df['tic'].astype(str).unique())
-        
+
         # Initialize session state for tickers if not present
         if 'selected_tickers_state' not in st.session_state:
             st.session_state['selected_tickers_state'] = tickers[:3] if len(tickers) > 0 else []
 
         st.sidebar.subheader("Ticker Selection")
         col_t1, col_t2 = st.sidebar.columns(2)
-        
+
         if col_t1.button("Select All"):
             st.session_state['selected_tickers_state'] = tickers
-        
+
         if col_t2.button("Deselect All"):
             st.session_state['selected_tickers_state'] = []
-            
+
         selected_tickers = st.sidebar.multiselect(
-            "Select Ticker(s)", 
-            tickers, 
+            "Select Ticker(s)",
+            tickers,
             key='selected_tickers_state'
         )
-        
+
         if selected_tickers:
             df = df[df['tic'].isin(selected_tickers)]
-    
+
     # Date Range Filter (based on rdq)
     if 'rdq' in df.columns:
         min_date = df['rdq'].min().date()
         max_date = df['rdq'].max().date()
-        
+
         # Ensure dates are valid
         if pd.notnull(min_date) and pd.notnull(max_date):
             start_date, end_date = st.sidebar.date_input(
-                "Select Report Date Range", 
+                "Select Report Date Range",
                 [min_date, max_date],
                 min_value=min_date,
                 max_value=max_date
@@ -146,7 +146,7 @@ def main():
     st.sidebar.info(f"Showing **{len(df)}** rows")
 
     # --- Dashboard Content ---
-    
+
     # Top Metrics
     col1, col2, col3, col4 = st.columns(4)
     col1.metric("Total Records", f"{len(df):,}")
@@ -159,27 +159,27 @@ def main():
 
     with tab1:
         st.subheader("Price & Yield Analysis")
-        
+
         if 'tic' in df.columns and len(selected_tickers) > 0:
              # Price vs Time (rdq_price)
             if 'rdq_price' in df.columns and 'rdq' in df.columns:
                 fig_price = px.line(
-                    df.sort_values(by='rdq'), 
-                    x='rdq', 
-                    y='rdq_price', 
+                    df.sort_values(by='rdq'),
+                    x='rdq',
+                    y='rdq_price',
                     color='tic',
                     markers=True,
                     title="Price Trends over Time (RDQ Price)",
                     labels={'rdq': 'Report Date', 'rdq_price': 'Price'}
                 )
                 st.plotly_chart(fig_price, use_container_width=True)
-            
-            # Yield comparison 
+
+            # Yield comparison
             if 'rdq_yield' in df.columns and 'rdq' in df.columns:
                  fig_yield = px.scatter(
-                    df, 
-                    x='rdq', 
-                    y='rdq_yield', 
+                    df,
+                    x='rdq',
+                    y='rdq_yield',
                     size='rdq_volume' if 'rdq_volume' in df.columns else None,
                     color='tic',
                     title="Yield Analysis (sized by Volume)",
@@ -192,28 +192,28 @@ def main():
     with tab2:
         st.subheader("Distribution Analysis")
         col_dist1, col_dist2 = st.columns(2)
-        
+
         with col_dist1:
             if 'bond_return' in df.columns:
                 fig_hist = px.histogram(
-                    df, 
-                    x="bond_return", 
-                    nbins=50, 
+                    df,
+                    x="bond_return",
+                    nbins=50,
                     title="Bond Return Distribution",
                     color_discrete_sequence=['#636EFA'],
-                    marginal="box" 
+                    marginal="box"
                 )
                 st.plotly_chart(fig_hist, use_container_width=True)
-        
+
         with col_dist2:
             # Correlation Heatmap for Return Columns
             return_cols = [c for c in df.columns if 'return' in c or 'yield' in c]
             if len(return_cols) > 0:
                 corr = df[return_cols].corr()
                 fig_corr = px.imshow(
-                    corr, 
+                    corr,
                     title="Correlation Matrix (Returns & Yields)",
-                    color_continuous_scale='RdBu_r', 
+                    color_continuous_scale='RdBu_r',
                     zmin=-1, zmax=1
                 )
                 st.plotly_chart(fig_corr, use_container_width=True)

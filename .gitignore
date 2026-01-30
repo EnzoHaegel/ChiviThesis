@@ -1,1 +1,2 @@
-Thesis/venv/**
+**/venv/**
+**/best_model.pt
