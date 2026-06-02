@@ -1,0 +1,7 @@
+outputs/
+*.log
+__pycache__/
+*.pyc
+.pytest_cache/
+*.joblib
+.ipynb_checkpoints/
