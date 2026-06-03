@@ -90,6 +90,22 @@ on the 2025 out-of-sample year:
 > absolute gold standard. The strongest, lexicon-independent result is the
 > Phase-4 emergence of new risk vocabulary.
 
+### Gold-standard validation (`gold/`)
+
+An independent 90-sentence gold set (annotated by reading, not by the lexicon)
+quantifies the caveat above. Against the gold, span F1@0.5 is ≈ **0.34** for
+both the detector and the raw lexicon — lower than the weak-supervision 0.60,
+and **recall-limited**: the lexicon is precise (P≈0.58) but narrow (R≈0.24),
+missing real risks outside the seed vocabulary (COVID-19, Dodd-Frank, GDPR,
+material weakness, …). The fix is lexicon coverage / an embedding scorer, not
+the IoU machinery. See `gold/GOLD_REPORT.md`. Reproduce:
+
+```bash
+python scripts/make_gold_worksheet.py            # -> gold/worksheet.csv
+python gold/seed_gold_llm.py                     # -> gold/gold_annotations.csv (LLM draft)
+python scripts/eval_gold.py                       # -> gold/gold_eval.json
+```
+
 ---
 
 ## Install & run
