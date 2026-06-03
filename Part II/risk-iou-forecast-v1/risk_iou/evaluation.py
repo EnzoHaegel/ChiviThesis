@@ -36,7 +36,12 @@ def detect_document(
     """Score candidates, drop sub-threshold ones, then apply NMS."""
     scored = model.score_spans(ann.candidates)
     kept = [s for s in scored if s.score >= cfg.score_threshold]
-    return nms(kept, iou_threshold=cfg.nms_iou_threshold)
+    return nms(
+        kept,
+        iou_threshold=cfg.nms_iou_threshold,
+        containment_threshold=cfg.nms_containment_threshold,
+        length_bonus=cfg.phrase_length_bonus,
+    )
 
 
 def match(

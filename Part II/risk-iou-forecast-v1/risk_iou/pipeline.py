@@ -197,7 +197,11 @@ def _write_markdown_report(out, manifest, eval_payload, fc_summary, fc) -> None:
 
     lines.append("## Phase 4 — 2025 out-of-sample forecasting\n")
     s = fc_summary
-    lines.append(f"- 2025 distinct risk terms detected: **{s['n_oos_terms']}**")
+    lines.append(
+        f"- 2025 risk terms (≤{manifest['config']['forecast_max_term_len']} tokens): "
+        f"**{s['n_oos_terms_material']}** material "
+        f"(+{s['n_rare_excluded']} rare, excluded) of {s['n_oos_terms_total']} total"
+    )
     lines.append(f"- Persistent (constantly exist): **{s['n_persistent']}**")
     lines.append(f"- Intermittent: **{s['n_intermittent']}**")
     lines.append(f"- Novel (new in 2025): **{s['n_novel']}**")

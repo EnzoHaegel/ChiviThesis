@@ -54,11 +54,41 @@ on the 2025 out-of-sample year:
 - Apply the trained detector to 2025; compare the 2025 risk vocabulary against
   the historical one.
 - Classify each 2025 risk term as **PERSISTENT** (constantly exists),
-  **INTERMITTENT**, or **NOVEL** (new in 2025).
-- Metrics: forecast recall (share of 2025 terms seen before), historical-risk
-  recall, vocabulary IoU, cross-quarter consistency, detection generalisation.
+  **INTERMITTENT**, **NOVEL** (new in 2025), or **RARE** (one-off, excluded).
+- The forecast runs on a **bounded vocabulary** (terms ≤ 3 tokens) and a NOVEL
+  term must be *materially* disclosed in 2025 (present in ≥ a min share of
+  filings) — otherwise idiosyncratic long phrases would masquerade as new risks.
+- Metrics: forecast recall (share of material 2025 terms seen before),
+  historical-risk recall, vocabulary IoU, cross-quarter consistency, detection
+  generalisation.
 - → `forecast_2025_terms.csv`, `forecast_persistent.csv`, `forecast_novel.csv`,
   `forecast_summary.json`, figures.
+
+---
+
+## Results (full corpus: 1465 historical → 1181 OOS-2025 filings)
+
+**Detection (held-out test, 281 filings, 10,887 ground-truth spans)**
+- Candidate (window) level: accuracy **0.96**, F1 **0.83**.
+- Span detection IoU@0.5 (standard operating point): F1 **0.60** (recall 0.96).
+- IoU@0.7 (strict localisation): F1 0.17 — the honest ceiling of *weak-
+  supervision* labels; the detected spans rarely line up token-perfectly with
+  the lexicon ground truth. Report and read IoU@0.5 as the headline.
+
+**2025 forecasting**
+- 662 material risk terms → **469 persistent · 149 novel · 44 intermittent**
+  (9,848 rare long-tail terms excluded).
+- Forecast recall **0.77** (most 2025 risk language is recurring),
+  historical-risk recall **0.92** (established risks reliably reappear).
+- **New in 2025**: retaliatory / reciprocal tariffs, cybersecurity incidents,
+  environmental-social (ESG), economic sanctions, geopolitical tensions,
+  artificial intelligence, global supply chain — a faithful snapshot of the
+  2025 disclosure landscape.
+
+> **Caveat to report honestly:** ground truth is lexicon-based *weak
+> supervision*, so F1 measures agreement with lexicon-derived labels, not an
+> absolute gold standard. The strongest, lexicon-independent result is the
+> Phase-4 emergence of new risk vocabulary.
 
 ---
 

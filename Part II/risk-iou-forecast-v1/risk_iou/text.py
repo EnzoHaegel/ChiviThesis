@@ -24,6 +24,8 @@ STOPWORDS: frozenset[str] = frozenset(
     will would shall should can could may might must this that these those it its
     we our us you your they their he she his her i my me which who whom whose what
     not no any all some such other more most than then there here also however
+    due including related regarding concerning certain various potential potentially
+    particularly include includes additional additionally if when while because
     """.split()
 )
 # Sentence boundary: . ! ? optionally followed by quotes/brackets, then whitespace.

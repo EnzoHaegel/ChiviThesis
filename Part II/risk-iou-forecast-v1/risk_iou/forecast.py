@@ -59,6 +59,10 @@ def _detections_table(
             term = " ".join(d.text.lower().split())
             if not term:
                 continue
+            # bound the forecast vocabulary to short risk keywords; long unique
+            # strings explode the term count and masquerade as novel risks.
+            if len(term.split()) > cfg.forecast_max_term_len:
+                continue
             rows.append(
                 {
                     "filing_id": ann.filing.filing_id,
@@ -129,10 +133,19 @@ def forecast(
         h = hist_prof.loc[term] if term in hist_prof.index else None
         h_doc_freq = float(h["doc_freq"]) if h is not None else 0.0
         h_q_frac = float(h["quarter_frac"]) if h is not None else 0.0
-        if h_doc_freq <= cfg.novelty_max_hist_doc_freq:
-            status = "NOVEL"
-        elif h_q_frac >= cfg.persistence_min_quarter_frac:
+        oos_doc_freq = float(r["doc_freq"])
+        established = h_q_frac >= cfg.persistence_min_quarter_frac
+        unseen = h_doc_freq <= cfg.novelty_max_hist_doc_freq
+        material = oos_doc_freq >= cfg.novelty_min_oos_doc_freq
+        if established:
+            # seen across many past quarters AND still present in 2025
             status = "PERSISTENT"
+        elif unseen and material:
+            # essentially absent before, yet broadly disclosed in 2025
+            status = "NOVEL"
+        elif not material:
+            # too idiosyncratic in 2025 to call an emerging theme
+            status = "RARE"
         else:
             status = "INTERMITTENT"
         records.append(
@@ -154,15 +167,21 @@ def forecast(
     novel = term_table[term_table["status"] == "NOVEL"].reset_index(drop=True)
 
     # --- set-level metrics ---------------------------------------------------
+    # Restrict the headline analysis to the MATERIAL vocabulary (terms disclosed
+    # in a meaningful share of 2025 filings); the rare long-tail is reported
+    # separately and excluded from the recall denominator so the metric reflects
+    # genuine emerging-vs-persistent themes, not idiosyncratic one-offs.
+    material_tbl = term_table[term_table["status"] != "RARE"]
     hist_terms = set(hist_prof.index)
-    oos_terms = set(oos_prof["term"])
+    oos_terms = set(material_tbl["term"])
     established = set(
         hist_prof[hist_prof["quarter_frac"] >= cfg.persistence_min_quarter_frac].index
     )
 
-    n_oos = max(len(oos_terms), 1)
-    novel_share = len(novel) / n_oos
-    forecast_recall = 1.0 - novel_share          # share of 2025 terms seen before
+    n_material = max(len(material_tbl), 1)
+    n_novel = int((term_table["status"] == "NOVEL").sum())
+    novel_share = n_novel / n_material
+    forecast_recall = 1.0 - novel_share          # share of material 2025 terms seen before
     hist_risk_recall = (
         len(established & oos_terms) / len(established) if established else 0.0
     )
@@ -178,10 +197,12 @@ def forecast(
     summary = {
         "n_historical_docs": len(historical),
         "n_oos_docs": len(oos),
-        "n_oos_terms": len(oos_terms),
+        "n_oos_terms_total": int(len(oos_prof)),
+        "n_oos_terms_material": int(len(material_tbl)),
         "n_persistent": int((term_table["status"] == "PERSISTENT").sum()),
         "n_intermittent": int((term_table["status"] == "INTERMITTENT").sum()),
-        "n_novel": int((term_table["status"] == "NOVEL").sum()),
+        "n_novel": n_novel,
+        "n_rare_excluded": int((term_table["status"] == "RARE").sum()),
         "forecast_recall_terms_seen_before": round(forecast_recall, 4),
         "novel_share": round(novel_share, 4),
         "historical_risk_recall": round(hist_risk_recall, 4),

@@ -101,7 +101,7 @@ def test_pipeline_end_to_end(tmp_path):
 
     # forecasting found the OOS-only risks as novel (tariffs / trade war / AI)
     fc = artifacts.forecast_summary
-    assert fc["n_oos_terms"] > 0
+    assert fc["n_oos_terms_material"] > 0
     assert 0.0 <= fc["forecast_recall_terms_seen_before"] <= 1.0
     novel_path = os.path.join(out, "forecast_novel.csv")
     novel_txt = open(novel_path, encoding="utf-8").read().lower()

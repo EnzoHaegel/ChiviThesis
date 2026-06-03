@@ -29,20 +29,34 @@ def nms(
     spans: list[Span],
     iou_threshold: float = 0.5,
     containment_threshold: float = 0.8,
+    length_bonus: float = 0.0,
 ) -> list[Span]:
     """Return the kept spans after greedy NMS.
 
     A weaker span is suppressed by a kept span when their IoU exceeds
     ``iou_threshold`` OR when one is largely contained in the other
     (``containment_threshold``). Set ``containment_threshold`` to 1.01 to recover
-    pure IoU NMS. Stable w.r.t. ties (earlier start, then shorter span) so the
-    result is deterministic.
+    pure IoU NMS.
+
+    ``length_bonus`` adds ``length_bonus * (len - 1)`` to a span's score *for
+    ordering only* (the reported ``span.score`` is untouched). With a small
+    value this makes the more specific / longer phrase win over a contained
+    fragment when their model scores are close — e.g. keeping
+    "artificial intelligence" rather than the bare "artificial" — which yields
+    cleaner extracted keywords. Default 0.0 = pure score ordering.
+
+    Stable w.r.t. ties (earlier start, then shorter span) so the result is
+    deterministic.
     """
     if not spans:
         return []
+
+    def eff(i: int) -> float:
+        return spans[i].score + length_bonus * (spans[i].length - 1)
+
     order = sorted(
         range(len(spans)),
-        key=lambda i: (-spans[i].score, spans[i].start, spans[i].length),
+        key=lambda i: (-eff(i), spans[i].start, spans[i].length),
     )
     suppressed = [False] * len(spans)
     keep: list[Span] = []

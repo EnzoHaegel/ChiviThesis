@@ -65,6 +65,10 @@ class Config:
 
     # --- IoU / NMS thresholds ------------------------------------------------
     nms_iou_threshold: float = 0.5       # suppress overlapping detections above this
+    nms_containment_threshold: float = 0.8   # also suppress strongly-nested spans
+    phrase_length_bonus: float = 0.02    # NMS tie-break favouring longer phrases
+    # (kept small: a large bonus over-extends detections past the ground-truth
+    # phrase and collapses IoU matching at strict thresholds)
     match_iou_threshold: float = 0.5     # detection<->ground-truth match (TP) cutoff
     eval_iou_thresholds: tuple[float, ...] = (0.3, 0.5, 0.7)
 
@@ -78,6 +82,14 @@ class Config:
     # appeared (or appeared below the rarity floor) before oos_year.
     persistence_min_quarter_frac: float = 0.25
     novelty_max_hist_doc_freq: float = 0.01
+    # Forecasting operates on a BOUNDED vocabulary so the analysis is robust:
+    #  - only terms up to this many tokens (risk keywords are short; long unique
+    #    strings would otherwise explode the term count and look spuriously novel);
+    #  - a NOVEL term must also be *materially* disclosed in the OOS year (present
+    #    in at least this fraction of OOS filings) — a one-off long phrase is not
+    #    an emerging risk theme. Terms below the floor are tagged RARE, not novel.
+    forecast_max_term_len: int = 3
+    novelty_min_oos_doc_freq: float = 0.01
 
     # --- Outputs -------------------------------------------------------------
     output_dir: str = str(REPO_ROOT / "outputs")
