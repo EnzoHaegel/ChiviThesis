@@ -1,0 +1,61 @@
+{
+  "n_sentences": 90,
+  "n_gold_spans": 89,
+  "by_iou_threshold": {
+    "0.3": {
+      "model_vs_gold": {
+        "tp": 33,
+        "fp": 58,
+        "fn": 60,
+        "precision": 0.3626,
+        "recall": 0.3548,
+        "f1": 0.3587
+      },
+      "lexicon_vs_gold": {
+        "tp": 24,
+        "fp": 14,
+        "fn": 69,
+        "precision": 0.6316,
+        "recall": 0.2581,
+        "f1": 0.3664
+      }
+    },
+    "0.5": {
+      "model_vs_gold": {
+        "tp": 31,
+        "fp": 60,
+        "fn": 62,
+        "precision": 0.3407,
+        "recall": 0.3333,
+        "f1": 0.337
+      },
+      "lexicon_vs_gold": {
+        "tp": 22,
+        "fp": 16,
+        "fn": 71,
+        "precision": 0.5789,
+        "recall": 0.2366,
+        "f1": 0.3359
+      }
+    },
+    "0.7": {
+      "model_vs_gold": {
+        "tp": 16,
+        "fp": 75,
+        "fn": 77,
+        "precision": 0.1758,
+        "recall": 0.172,
+        "f1": 0.1739
+      },
+      "lexicon_vs_gold": {
+        "tp": 15,
+        "fp": 23,
+        "fn": 78,
+        "precision": 0.3947,
+        "recall": 0.1613,
+        "f1": 0.229
+      }
+    }
+  },
+  "note": "Gold = independent (lexicon-free) annotation. model_vs_gold is the 'true' detector F1; lexicon_vs_gold validates the weak-supervision labels."
+}
